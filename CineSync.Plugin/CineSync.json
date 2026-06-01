@@ -1,0 +1,11 @@
+{
+  "Name": "CineSync",
+  "Author": "Jackie",
+  "Punchline": "Self-hosted synced in-world media screens for movie nights.",
+  "Description": "Host a small server; paired friends connect and automatically see the in-world screens (TVs) you create, all playing the same media. Pairs with a self-hosted Owncast stream.",
+  "ApplicableVersion": "any",
+  "Tags": [ "sync", "media", "movie", "screen", "cinema" ],
+  "CategoryTags": [ "utility" ],
+  "DalamudApiLevel": 15,
+  "IconUrl": ""
+}

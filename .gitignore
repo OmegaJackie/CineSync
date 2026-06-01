@@ -1,0 +1,9 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+
+# OS / editor
+Thumbs.db
+.DS_Store

@@ -1,0 +1,22 @@
+[
+  {
+    "Author": "OmegaJackie",
+    "Name": "CineSync",
+    "InternalName": "CineSync",
+    "Punchline": "Self-hosted synced in-world media screens for movie nights.",
+    "Description": "Host a small server; paired friends connect and automatically see the in-world screens (TVs) you create, all playing the same media. Move/resize/rotate gizmo, LibVLC video, auto-reconnect. Pairs with a self-hosted Owncast stream.",
+    "Tags": [ "sync", "media", "movie", "screen", "cinema", "video", "owncast" ],
+    "CategoryTags": [ "utility" ],
+    "AssemblyVersion": "0.1.0.0",
+    "Changelog": "Initial release: synced in-world screens, XYZ move/resize/rotate gizmo, LibVLCSharp video playback, playback sync, heartbeat + auto-reconnect.",
+    "ApplicableVersion": "any",
+    "DalamudApiLevel": 15,
+    "IsHide": false,
+    "IsTestingExclusive": false,
+    "RepoUrl": "https://github.com/OmegaJackie/CineSync",
+    "DownloadLinkInstall": "https://github.com/OmegaJackie/CineSync/releases/latest/download/CineSync.zip",
+    "DownloadLinkTesting": "https://github.com/OmegaJackie/CineSync/releases/latest/download/CineSync.zip",
+    "DownloadLinkUpdate": "https://github.com/OmegaJackie/CineSync/releases/latest/download/CineSync.zip",
+    "IconUrl": ""
+  }
+]
