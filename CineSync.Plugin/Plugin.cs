@@ -193,9 +193,13 @@ public sealed class Plugin : IDalamudPlugin
                 dl.AddText(mid - textSize * 0.5f, ImGui.GetColorU32(new Vector4(1, 1, 1, 1)), label);
             }
 
-            var selected = s.Id == SelectedId;
-            var border = selected ? new Vector4(1f, 0.85f, 0.3f, 1f) : new Vector4(0.4f, 0.7f, 1f, 1f);
-            dl.AddQuad(p1, p2, p3, p4, ImGui.GetColorU32(border), selected ? 3.5f : 2f);
+            // Edit visuals (gold highlight) only while editing; pure video when just watching.
+            var selected = EditMode && s.Id == SelectedId;
+            if (EditMode)
+            {
+                var border = selected ? new Vector4(1f, 0.85f, 0.3f, 1f) : new Vector4(0.4f, 0.7f, 1f, 1f);
+                dl.AddQuad(p1, p2, p3, p4, ImGui.GetColorU32(border), selected ? 3.5f : 2f);
+            }
         }
 
         // Move/resize gizmo for the selected screen (only while Edit mode is on — easily hidden).
@@ -214,9 +218,13 @@ public sealed class Plugin : IDalamudPlugin
 
     // ---- Plumbing ------------------------------------------------------------------
 
+    private readonly WorldRenderer _world = new();
+
     private void OnCommand(string command, string args)
     {
-        if (args.Trim().Equals("edit", StringComparison.OrdinalIgnoreCase)) { EditMode = !EditMode; return; }
+        var a = args.Trim().ToLowerInvariant();
+        if (a == "edit") { EditMode = !EditMode; return; }
+        if (a == "gpu") { _world.LogFoundation(); return; }   // M5 checkpoint 1 (see /xllog)
         ToggleUi();
     }
     public void ToggleUi() => _configWindow.Toggle();

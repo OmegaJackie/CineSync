@@ -13,15 +13,27 @@ foreach (var app in new[] { "Microsoft.NETCore.App", "Microsoft.WindowsDesktop.A
     if (d != null) paths.AddRange(Directory.GetFiles(d, "*.dll"));
 }
 var mlc = new MetadataLoadContext(new PathAssemblyResolver(paths.GroupBy(Path.GetFileName).Select(g => g.First())));
-var ig = mlc.LoadFromAssemblyPath(Path.Combine(dev, "Dalamud.Bindings.ImGui.dll"));
-var imgui = ig.GetType("Dalamud.Bindings.ImGui.ImGui");
+var fcs = mlc.LoadFromAssemblyPath(Path.Combine(dev, "FFXIVClientStructs.dll"));
 
-Console.WriteLine("== ImGui capture-mouse APIs ==");
-foreach (var m in imgui.GetMethods().Where(m => m.Name.Contains("WantCapture") || m.Name.Contains("CaptureMouse") || m.Name == "GetIO"))
-    Console.WriteLine("  " + m.ReturnType.Name + " " + m.Name + "(" + string.Join(", ", m.GetParameters().Select(p => p.ParameterType.Name + " " + p.Name)) + ")");
+void Dump(string full, Func<FieldInfo, bool> filter = null)
+{
+    var t = fcs.GetType(full);
+    Console.WriteLine($"\n==== {full} {(t == null ? "(MISSING)" : "")}");
+    if (t == null) return;
+    foreach (var f in t.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
+        if (filter == null || filter(f))
+            Console.WriteLine($"   {f.FieldType.Name} {f.Name}");
+    foreach (var m in t.GetMethods(BindingFlags.Public | BindingFlags.Static).Where(m => m.Name.Contains("Instance")))
+        Console.WriteLine($"   static {m.ReturnType.Name} {m.Name}()");
+}
 
-Console.WriteLine("\n== ImGuiIOPtr.WantCaptureMouse (settable?) ==");
-var io = ig.GetTypes().FirstOrDefault(t => t.Name == "ImGuiIOPtr");
-if (io != null)
-    foreach (var p in io.GetProperties().Where(p => p.Name.Contains("WantCapture")))
-        Console.WriteLine($"  prop {p.PropertyType.Name} {p.Name}  canWrite={p.CanWrite}");
+Dump("FFXIVClientStructs.FFXIV.Client.Graphics.Kernel.Device");
+Dump("FFXIVClientStructs.FFXIV.Client.Graphics.Kernel.SwapChain");
+Dump("FFXIVClientStructs.FFXIV.Client.Graphics.Scene.Camera", f => f.FieldType.Name.Contains("Matrix") || f.Name.Contains("Matrix"));
+Dump("FFXIVClientStructs.FFXIV.Client.Graphics.Render.Camera", f => f.FieldType.Name.Contains("Matrix") || f.Name.Contains("Matrix"));
+
+// Find depth/rendertarget managers
+Console.WriteLine("\n==== types with RenderTarget/DepthStencil in name ====");
+foreach (var t in fcs.GetTypes())
+    if (t.Name.Contains("RenderTarget") || t.Name.Contains("DepthStencil") || t.Name == "RenderManager")
+        Console.WriteLine("   " + t.FullName);
