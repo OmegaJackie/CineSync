@@ -55,11 +55,13 @@ public sealed class Gizmo
         dl.AddCircleFilled(cs, 4f, ImGui.GetColorU32(new Vector4(1, 1, 1, 0.9f)));
 
         var changed = false;
+        var capture = _active != Handle.None;   // capture mouse so clicks don't leak to the game
         foreach (var d in defs)
         {
             if (!Svc.GameGui.WorldToScreen(d.tip, out var ts)) continue;
             var col = ImGui.GetColorU32(d.col);
             var hot = _active == d.h || Dist(mouse, ts) < HitRadius;
+            capture |= hot;
 
             dl.AddLine(cs, ts, col, hot ? 4f : 2.5f);
             dl.AddCircleFilled(ts, hot ? HandleRadius + 2f : HandleRadius, col);
@@ -106,6 +108,7 @@ public sealed class Gizmo
             var pos = cs + r.off;
             var col = ImGui.GetColorU32(r.col);
             var hot = _active == r.h || Dist(mouse, pos) < HitRadius;
+            capture |= hot;
             dl.AddLine(cs, pos, ImGui.GetColorU32(new Vector4(r.col.X, r.col.Y, r.col.Z, 0.35f)), 1.5f);
             dl.AddCircle(pos, hot ? 10f : 8f, col, 16, hot ? 3.5f : 2.5f);
 
@@ -121,6 +124,10 @@ public sealed class Gizmo
                 changed = true;
             }
         }
+
+        // While hovering/dragging a handle, take the mouse so clicks don't reach the game
+        // (which otherwise plays UI/cursor sounds and may target things behind the screen).
+        if (capture) ImGui.SetNextFrameWantCaptureMouse(true);
 
         return changed;
     }

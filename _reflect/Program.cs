@@ -13,49 +13,15 @@ foreach (var app in new[] { "Microsoft.NETCore.App", "Microsoft.WindowsDesktop.A
     if (d != null) paths.AddRange(Directory.GetFiles(d, "*.dll"));
 }
 var mlc = new MetadataLoadContext(new PathAssemblyResolver(paths.GroupBy(Path.GetFileName).Select(g => g.First())));
-Assembly Load(string n) => mlc.LoadFromAssemblyPath(Path.Combine(dev, n));
-var dal = Load("Dalamud.dll");
-var igAsm = Load("Dalamud.Bindings.ImGui.dll");
+var ig = mlc.LoadFromAssemblyPath(Path.Combine(dev, "Dalamud.Bindings.ImGui.dll"));
+var imgui = ig.GetType("Dalamud.Bindings.ImGui.ImGui");
 
-string Sig(MethodInfo m) => m.ReturnType.Name + " " + m.Name + "(" +
-    string.Join(", ", m.GetParameters().Select(p => (p.ParameterType.IsByRef ? "ref " : "") + TypeName(p.ParameterType) + " " + p.Name)) + ")";
-string TypeName(Type t) => t.IsByRef ? t.GetElementType().Name : t.Name;
+Console.WriteLine("== ImGui capture-mouse APIs ==");
+foreach (var m in imgui.GetMethods().Where(m => m.Name.Contains("WantCapture") || m.Name.Contains("CaptureMouse") || m.Name == "GetIO"))
+    Console.WriteLine("  " + m.ReturnType.Name + " " + m.Name + "(" + string.Join(", ", m.GetParameters().Select(p => p.ParameterType.Name + " " + p.Name)) + ")");
 
-// ImDrawListPtr image/circle methods
-var dlp = igAsm.GetType("Dalamud.Bindings.ImGui.ImDrawListPtr");
-Console.WriteLine("== ImDrawListPtr AddImageQuad / AddImage / AddCircle ==");
-foreach (var m in dlp.GetMethods().Where(m => m.Name is "AddImageQuad" or "AddImage" or "AddCircle").Take(8))
-    Console.WriteLine("  " + Sig(m));
-
-// ITextureProvider
-var tp = dal.GetType("Dalamud.Plugin.Services.ITextureProvider");
-Console.WriteLine("\n== ITextureProvider (Create*/raw) ==");
-if (tp != null)
-    foreach (var m in tp.GetMethods().Where(m => m.Name.Contains("Create") || m.Name.Contains("Raw")))
-        Console.WriteLine("  " + Sig(m));
-
-// IDalamudTextureWrap — search by simple name
-Console.WriteLine("\n== IDalamudTextureWrap ==");
-var tw = dal.GetTypes().FirstOrDefault(t => t.Name == "IDalamudTextureWrap");
-if (tw != null)
-{
-    Console.WriteLine("  full: " + tw.FullName);
-    foreach (var p in tw.GetProperties()) Console.WriteLine("    prop " + p.PropertyType.Name + " " + p.Name);
-    foreach (var m in tw.GetMethods().Where(m => !m.IsSpecialName)) Console.WriteLine("    " + Sig(m));
-}
-
-// RawImageSpecification
-Console.WriteLine("\n== RawImageSpecification ==");
-var ris = dal.GetTypes().FirstOrDefault(t => t.Name == "RawImageSpecification");
-if (ris != null)
-{
-    Console.WriteLine("  full: " + ris.FullName);
-    foreach (var c in ris.GetConstructors()) Console.WriteLine("    ctor(" + string.Join(", ", c.GetParameters().Select(p => p.ParameterType.Name + " " + p.Name)) + ")");
-    foreach (var p in ris.GetProperties()) Console.WriteLine("    prop " + p.PropertyType.Name + " " + p.Name);
-    foreach (var m in ris.GetMethods(BindingFlags.Public | BindingFlags.Static).Where(m => !m.IsSpecialName)) Console.WriteLine("    static " + Sig(m));
-}
-
-// ImTextureID
-Console.WriteLine("\n== ImTextureID ==");
-var tid = igAsm.GetTypes().FirstOrDefault(t => t.Name == "ImTextureID");
-if (tid != null) { foreach (var c in tid.GetConstructors()) Console.WriteLine("    ctor(" + string.Join(", ", c.GetParameters().Select(p => p.ParameterType.Name)) + ")"); foreach (var op in tid.GetMethods().Where(m => m.IsSpecialName && m.Name.StartsWith("op_"))) Console.WriteLine("    " + Sig(op)); }
+Console.WriteLine("\n== ImGuiIOPtr.WantCaptureMouse (settable?) ==");
+var io = ig.GetTypes().FirstOrDefault(t => t.Name == "ImGuiIOPtr");
+if (io != null)
+    foreach (var p in io.GetProperties().Where(p => p.Name.Contains("WantCapture")))
+        Console.WriteLine($"  prop {p.PropertyType.Name} {p.Name}  canWrite={p.CanWrite}");
