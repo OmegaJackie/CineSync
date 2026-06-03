@@ -35,7 +35,9 @@ public sealed class MediaScreen : IDisposable
     {
         _vlc = vlc;
         _native = Marshal.AllocHGlobal(W * H * 4);
-        _mp = new MediaPlayer(_vlc) { EnableHardwareDecoding = true };
+        // Hardware decoding + vmem callbacks => GPU frames never reach our CPU buffer (green screen
+        // on many GPUs). Force software decoding so the vmem path always gets real pixels.
+        _mp = new MediaPlayer(_vlc) { EnableHardwareDecoding = false };
 
         _lockCb = Lock;
         _unlockCb = Unlock;

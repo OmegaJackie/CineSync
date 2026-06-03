@@ -20,7 +20,7 @@ public sealed class MediaManager : IDisposable
         {
             var dir = Svc.PluginInterface.AssemblyLocation.Directory!.FullName;
             Core.Initialize(Path.Combine(dir, "libvlc", "win-x64"));
-            _vlc = new LibVLC("--quiet", "--no-osd", "--network-caching=1500");
+            _vlc = new LibVLC("--quiet", "--no-osd", "--network-caching=1500", "--avcodec-hw=none");
             Svc.Log.Info("CineSync: LibVLC initialised.");
         }
         catch (Exception ex) { Svc.Log.Error(ex, "CineSync: LibVLC init failed (video disabled)."); }

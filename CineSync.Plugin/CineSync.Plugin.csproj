@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AssemblyName>CineSync</AssemblyName>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>x64</Platforms>
     <Nullable>enable</Nullable>
