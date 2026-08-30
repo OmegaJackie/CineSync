@@ -55,4 +55,11 @@
     <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.21" />
   </ItemGroup>
 
+
+    <ItemGroup>
+        <!-- LibVLC/LibVLCSharp are LGPL-2.1-or-later and ship in this plugin's zip.
+             Their notices must travel with the binaries, so pack them. -->
+        <None Include="..\LICENSE" Link="LICENSE"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
+        <None Include="..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
+    </ItemGroup>
 </Project>

@@ -54,3 +54,12 @@ Open it with `/cinesync`.
 ## Status
 Server + protocol build & run (verified). Plugin builds & packages (`bin\Release\CineSync\latest.zip`).
 In-world rendering is the M1 placeholder (a labeled quad) — proves the sync loop before M3 adds video.
+
+## License
+
+CineSync's own code is Copyright (c) 2026 OmegaJackie, licensed [MIT](LICENSE).
+
+The release bundles libVLC and LibVLCSharp, which are LGPL-2.1-or-later and keep their own
+terms; the VLC Windows package additionally ships a few GPL-licensed modules. Details and the
+required notices are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md), and both files ship
+inside the plugin zip.
