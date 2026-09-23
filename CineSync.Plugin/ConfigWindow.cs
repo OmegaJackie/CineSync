@@ -57,6 +57,27 @@ public sealed class ConfigWindow : Window
 
         ImGui.Separator();
 
+        // ---- Rendering ----
+        ImGui.TextUnformatted("Rendering");
+        var occl = Cfg.DepthOcclusion;
+        if (ImGui.Checkbox("Depth occlusion (hide screens behind characters and walls)", ref occl))
+        {
+            Cfg.DepthOcclusion = occl;
+            _plugin.SaveConfig();
+        }
+        ImGui.TextDisabled("Off = flat overlay: screens paint over your character. (/cinesync flat toggles)");
+        ImGui.TextDisabled($"Status: {_plugin.OcclusionStatus}");
+
+        var tol = Cfg.OcclusionTolerance;
+        if (ImGui.DragFloat("Occlusion tolerance (m)", ref tol, 0.005f, 0f, 1f, "%.3f", ImGuiSliderFlags.None))
+            Cfg.OcclusionTolerance = Math.Clamp(tol, 0f, 1f);
+        // DragFloat reports a change every frame of the drag; only write the file on release.
+        if (ImGui.IsItemDeactivatedAfterEdit()) _plugin.SaveConfig();
+        ImGui.TextDisabled("Raise if a screen resting on a wall shimmers; lower if someone standing");
+        ImGui.TextDisabled("right in front of a screen bleeds through it.");
+
+        ImGui.Separator();
+
         // ---- Screen list ----
         ImGui.TextUnformatted($"Screens ({_plugin.Screens.Count})");
         foreach (var s in _plugin.Screens.ToList())

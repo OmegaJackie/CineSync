@@ -57,7 +57,13 @@ In-world rendering is the M1 placeholder (a labeled quad) — proves the sync lo
 
 ## License
 
-CineSync's own code is Copyright (c) 2026 OmegaJackie, licensed [MIT](LICENSE).
+CineSync's own code is Copyright (c) 2026 OmegaJackie, licensed
+[AGPL-3.0-or-later](LICENSE).
+
+CineSync was MIT up to and including v0.1.2. It moved to the AGPL in v0.2.0 because depth-correct
+world rendering links [Pictomancy](https://github.com/sourpuh/ffxiv_pictomancy), which is
+AGPL-3.0-or-later. Note the AGPL's network clause applies to the bundled CineSync sync server: if
+you run a modified server for others, you must offer them its source.
 
 The release bundles libVLC and LibVLCSharp, which are LGPL-2.1-or-later and keep their own
 terms; the VLC Windows package additionally ships a few GPL-licensed modules. Details and the

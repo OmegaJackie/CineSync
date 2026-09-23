@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AssemblyName>CineSync</AssemblyName>
-    <Version>0.1.2</Version>
+    <Version>0.2.0</Version>
     <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>x64</Platforms>
     <Nullable>enable</Nullable>
@@ -35,6 +35,10 @@
       <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="TerraFX.Interop.Windows">
+      <HintPath>$(DalamudLibPath)TerraFX.Interop.Windows.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="Lumina">
       <HintPath>$(DalamudLibPath)Lumina.dll</HintPath>
       <Private>false</Private>
@@ -51,6 +55,8 @@
 
   <ItemGroup>
     <PackageReference Include="DalamudPackager" Version="2.1.13" />
+    <!-- Depth-occluded world rendering (AGPL-3.0-or-later; see THIRD-PARTY-NOTICES.md). -->
+    <PackageReference Include="Pictomancy" Version="1.0.10" />
     <PackageReference Include="LibVLCSharp" Version="3.9.2" />
     <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.21" />
   </ItemGroup>

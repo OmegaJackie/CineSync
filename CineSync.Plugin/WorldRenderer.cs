@@ -3,15 +3,13 @@ using FFXIVClientStructs.FFXIV.Client.Graphics.Kernel;
 namespace CineSync.Plugin;
 
 /// <summary>
-/// M5 (depth-correct 3D rendering) — built in safe checkpoints.
+/// Diagnostics for the depth-occluded renderer. Trigger with "/cinesync gpu"; output goes to /xllog.
+/// Read-only pointer inspection — no D3D11 calls, no hooks, so it cannot crash the game.
 ///
-/// Checkpoint 1 (this): read and log the GPU foundation pointers from FFXIVClientStructs at
-/// runtime — D3D11 device/context, the swap chain, its back buffer, and (critically) the scene
-/// DEPTH buffer we'll depth-test against. No D3D11 calls, no render hook => zero crash risk.
-/// Trigger with "/cinesync gpu".
-///
-/// Next checkpoints: acquire view/projection from Render.Camera, hook Present, draw a solid quad,
-/// place it in 3D, add the video texture, then depth-test against the game depth buffer.
+/// The surface that matters is <c>RenderTargetManager.DepthStencil</c>: the unscaled scene
+/// reverse-Z depth buffer that <see cref="OccludedScreenRenderer"/> compares against. Note this is
+/// NOT <c>SwapChain.DepthStencil</c> (which this used to log) — that is a different surface and
+/// tells you nothing about whether world occlusion will work.
 /// </summary>
 public sealed unsafe class WorldRenderer
 {
@@ -24,15 +22,27 @@ public sealed unsafe class WorldRenderer
                    + $"context=0x{(nint)dev->D3D11DeviceContext:X}  size={dev->Width}x{dev->Height}");
 
         var sc = dev->SwapChain;
-        if (sc == null) { Svc.Log.Warning("CineSync GPU: SwapChain is null."); return; }
+        if (sc != null)
+            Svc.Log.Info($"CineSync GPU: swapChain=0x{(nint)sc:X}  backBuffer=0x{(nint)sc->BackBuffer:X}  "
+                       + $"dxgiSwapChain=0x{(nint)sc->DXGISwapChain:X}  {sc->Width}x{sc->Height}");
 
-        Svc.Log.Info($"CineSync GPU: swapChain=0x{(nint)sc:X}  backBuffer=0x{(nint)sc->BackBuffer:X}  "
-                   + $"depthStencil=0x{(nint)sc->DepthStencil:X}  dxgiSwapChain=0x{(nint)sc->DXGISwapChain:X}  {sc->Width}x{sc->Height}");
+        // ---- The scene depth buffer: this is what occlusion actually needs. ----
+        var rtm = FFXIVClientStructs.FFXIV.Client.Graphics.Render.RenderTargetManager.Instance();
+        if (rtm == null) { Svc.Log.Warning("CineSync GPU: RenderTargetManager.Instance() is null — occlusion cannot work."); return; }
 
-        var ok = dev->D3D11Forwarder != null && dev->D3D11DeviceContext != null
-                 && sc->BackBuffer != null && sc->DepthStencil != null && sc->DXGISwapChain != null;
+        var depth = rtm->DepthStencil;
+        if (depth == null) { Svc.Log.Warning("CineSync GPU: RenderTargetManager->DepthStencil is null — occlusion cannot work."); return; }
+
+        Svc.Log.Info($"CineSync GPU: sceneDepth=0x{(nint)depth:X}  format={depth->TextureFormat}  "
+                   + $"actual={depth->ActualWidth}x{depth->ActualHeight}  allocated={depth->AllocatedWidth}x{depth->AllocatedHeight}  "
+                   + $"tex2D=0x{(nint)depth->D3D11Texture2D:X}  srv=0x{(nint)depth->D3D11ShaderResourceView:X}");
+
+        if (depth->ActualWidth != depth->AllocatedWidth || depth->ActualHeight != depth->AllocatedHeight)
+            Svc.Log.Info("CineSync GPU: 3D resolution scaling is active — check that occlusion still lines up.");
+
+        var ok = dev->D3D11Forwarder != null && dev->D3D11DeviceContext != null && depth->D3D11Texture2D != null;
         Svc.Log.Info(ok
-            ? "CineSync GPU: ALL foundation pointers present — safe to proceed to the render hook."
-            : "CineSync GPU: some pointers null — will need a different acquisition path.");
+            ? "CineSync GPU: scene depth is present — depth occlusion has what it needs."
+            : "CineSync GPU: some pointers are null — depth occlusion will fall back to the flat overlay.");
     }
 }
