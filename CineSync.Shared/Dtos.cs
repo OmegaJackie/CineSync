@@ -23,7 +23,7 @@ public class ScreenDto
     public float Height { get; set; } = 2.25f;
 
     // Content
-    public string MediaUrl { get; set; } = "";   // e.g. your Owncast HLS / embed URL
+    public string MediaUrl { get; set; } = "";   // a URL VLC can play, e.g. Owncast HLS: http://host:8080/hls/stream.m3u8
     public bool Muted { get; set; } = false;
     public float Volume { get; set; } = 1.0f;
 

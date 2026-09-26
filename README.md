@@ -42,8 +42,14 @@ Open it with `/cinesync`.
 
 ## Usage
 1. Everyone: set the same **Server URL** (`ws://<host>:5252/ws`) and **Room code**, click **Connect**.
-2. Host: stand where you want the TV, set a **Default media URL** (your Owncast embed URL), click
-   **Create screen here**. It appears for everyone in the room.
+2. Host: stand where you want the TV, set a **Default media URL**, click **Create screen here**.
+   It appears for everyone in the room.
+
+The media URL goes straight to VLC on every client, so it must be a stream or file URL that
+friends can reach, not a web page. For Owncast that's the HLS playlist:
+`http://<host>:8080/hls/stream.m3u8`. The Owncast home page (`http://<host>:8080/`) and the
+`/embed` pages are HTML, so VLC can't play them. Don't use `localhost` here either: friends would
+be pointed at their own machine.
 
 ## Roadmap
 - **M1 (done): backbone** — server + protocol + plugin connect/sync + world-anchored placeholder quad.
