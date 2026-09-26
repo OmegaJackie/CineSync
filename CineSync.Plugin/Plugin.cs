@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Numerics;
 using CineSync.Shared;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -46,6 +47,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         pluginInterface.Create<Svc>();
         Config = Svc.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        SetVolume(Config.Volume, Config.Muted);    // also clamps a hand-edited config
 
         _configWindow = new ConfigWindow(this);
         _windows.AddWindow(_configWindow);
@@ -53,7 +55,9 @@ public sealed class Plugin : IDalamudPlugin
         Svc.Commands.AddHandler(Command, new CommandInfo(OnCommand)
         {
             HelpMessage = "Open the CineSync window. '/cinesync edit' toggles the move/resize gizmo; "
-                        + "'/cinesync flat' toggles depth occlusion off/on."
+                        + "'/cinesync flat' toggles depth occlusion off/on; "
+                        + "'/cinesync volume 0-100' sets your volume (+N/-N nudges it); "
+                        + "'/cinesync mute' toggles mute."
         });
 
         Svc.PluginInterface.UiBuilder.Draw += OnDraw;
@@ -146,6 +150,16 @@ public sealed class Plugin : IDalamudPlugin
         _ = _client?.UpdatePlayback(dto);
     }
 
+    // ---- Local audio ---------------------------------------------------------------
+
+    /// <summary>Your own volume (0-100) and mute, for every screen. Never broadcast. Doesn't save.</summary>
+    public void SetVolume(int volume, bool muted)
+    {
+        Config.Volume = Math.Clamp(volume, 0, 100);
+        Config.Muted = muted;
+        _media.SetVolume(Config.Volume, Config.Muted);
+    }
+
     // ---- Draw ----------------------------------------------------------------------
 
     private void OnDraw()
@@ -167,6 +181,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         if (!Svc.ClientState.IsLoggedIn) return;
         _media.PruneExcept(_screens.Keys);
+        _media.EnforceVolume();
         var territory = Svc.ClientState.TerritoryType;
 
         // Materialise once: the occluded path costs a full-viewport render + composite per frame,
@@ -313,6 +328,30 @@ public sealed class Plugin : IDalamudPlugin
             StatusLine = Config.DepthOcclusion
                 ? "Depth occlusion ON — screens are hidden behind characters and walls."
                 : "Depth occlusion OFF — flat overlay (screens draw over everything).";
+            Svc.Log.Info($"[CineSync] {StatusLine}");
+            return;
+        }
+        if (a == "mute")
+        {
+            SetVolume(Config.Volume, !Config.Muted);
+            SaveConfig();
+            StatusLine = Config.Muted ? "Muted." : $"Unmuted (volume {Config.Volume}%).";
+            Svc.Log.Info($"[CineSync] {StatusLine}");
+            return;
+        }
+        // "volume 40" sets it, "volume +10" / "volume -10" nudge it (handy on a macro). Either unmutes.
+        if (a.StartsWith("volume", StringComparison.Ordinal))
+        {
+            var arg = a["volume".Length..].Trim().TrimEnd('%');
+            if (!int.TryParse(arg, NumberStyles.Integer, CultureInfo.InvariantCulture, out var n))
+            {
+                StatusLine = "Usage: /cinesync volume 0-100, or +N / -N to nudge it.";
+                _configWindow.IsOpen = true;    // the status line lives there
+                return;
+            }
+            SetVolume(arg[0] is '+' or '-' ? Config.Volume + n : n, muted: false);
+            SaveConfig();
+            StatusLine = $"Volume {Config.Volume}%.";
             Svc.Log.Info($"[CineSync] {StatusLine}");
             return;
         }

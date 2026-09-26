@@ -24,6 +24,7 @@ public class ScreenDto
 
     // Content
     public string MediaUrl { get; set; } = "";   // a URL VLC can play, e.g. Owncast HLS: http://host:8080/hls/stream.m3u8
+    // Muted/Volume are unused: volume is per-viewer (the plugin's Configuration) and never synced.
     public bool Muted { get; set; } = false;
     public float Volume { get; set; } = 1.0f;
 

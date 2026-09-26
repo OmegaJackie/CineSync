@@ -34,4 +34,13 @@ public class Configuration : IPluginConfiguration
     /// z-fights/shimmers; too high and someone standing very close in front of it bleeds through.
     /// </summary>
     public float OcclusionTolerance { get; set; } = 0.05f;
+
+    /// <summary>
+    /// Your own movie volume, 0-100 (%). Local only: it is never sent to the room, so each viewer
+    /// sets their own. One level covers every screen (see <see cref="MediaManager.SetVolume"/>).
+    /// </summary>
+    public int Volume { get; set; } = 100;
+
+    /// <summary>Silences every screen, for you only. Local, like <see cref="Volume"/>.</summary>
+    public bool Muted { get; set; } = false;
 }
