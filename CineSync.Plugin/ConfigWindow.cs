@@ -47,6 +47,26 @@ public sealed class ConfigWindow : Window
 
         ImGui.Separator();
 
+        // ---- Audio (local only) ----
+        ImGui.TextUnformatted("Audio");
+        var vol = Cfg.Volume;
+        // Moving the slider unmutes, like the Windows volume flyout does.
+        if (ImGui.SliderInt("Volume", ref vol, 0, 100, "%d%%", ImGuiSliderFlags.AlwaysClamp))
+            _plugin.SetVolume(vol, muted: false);
+        // SliderInt reports a change every frame of the drag; only write the file on release.
+        if (ImGui.IsItemDeactivatedAfterEdit()) _plugin.SaveConfig();
+        ImGui.SameLine();
+        var muted = Cfg.Muted;
+        if (ImGui.Checkbox("Mute", ref muted))
+        {
+            _plugin.SetVolume(Cfg.Volume, muted);
+            _plugin.SaveConfig();
+        }
+        ImGui.TextDisabled("Just for you: every viewer sets their own. One level for all screens.");
+        ImGui.TextDisabled("/cinesync volume 0-100 (or +10 / -10) and /cinesync mute also work.");
+
+        ImGui.Separator();
+
         // ---- Host controls ----
         ImGui.TextUnformatted("Host controls");
         if (ImGui.Button("Create screen here")) _plugin.CreateScreenHere();

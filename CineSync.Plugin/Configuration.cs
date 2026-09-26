@@ -19,7 +19,7 @@ public class Configuration : IPluginConfiguration
     /// <summary>Auto-connect when the plugin loads.</summary>
     public bool AutoConnect { get; set; } = false;
 
-    /// <summary>Default media URL pre-filled when creating a screen (e.g. your Owncast embed URL).</summary>
+    /// <summary>Default media URL pre-filled when creating a screen (e.g. your Owncast HLS playlist, http://host:8080/hls/stream.m3u8 — not the web or /embed page).</summary>
     public string DefaultMediaUrl { get; set; } = "";
 
     /// <summary>
@@ -34,4 +34,13 @@ public class Configuration : IPluginConfiguration
     /// z-fights/shimmers; too high and someone standing very close in front of it bleeds through.
     /// </summary>
     public float OcclusionTolerance { get; set; } = 0.05f;
+
+    /// <summary>
+    /// Your own movie volume, 0-100 (%). Local only: it is never sent to the room, so each viewer
+    /// sets their own. One level covers every screen (see <see cref="MediaManager.SetVolume"/>).
+    /// </summary>
+    public int Volume { get; set; } = 100;
+
+    /// <summary>Silences every screen, for you only. Local, like <see cref="Volume"/>.</summary>
+    public bool Muted { get; set; } = false;
 }

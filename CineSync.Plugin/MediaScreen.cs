@@ -37,7 +37,7 @@ public sealed unsafe class MediaScreen : IDisposable
 
     public string Url { get; private set; } = "";
 
-    public MediaScreen(LibVLC vlc, string url)
+    public MediaScreen(LibVLC vlc, string url, int volume, bool muted)
     {
         _vlc = vlc;
         _native = Marshal.AllocHGlobal(W * H * 4);
@@ -51,6 +51,8 @@ public sealed unsafe class MediaScreen : IDisposable
         _mp.SetVideoFormat("RV32", W, H, W * 4);          // RV32 == BGRA
         _mp.SetVideoCallbacks(_lockCb, _unlockCb, _displayCb);
 
+        // LibVLC creates the audio output along with the player, so this sticks before playback.
+        SetVolume(volume, muted);
         SetUrl(url);
     }
 
@@ -199,6 +201,31 @@ public sealed unsafe class MediaScreen : IDisposable
     public void Seek(double seconds)
     {
         try { _mp.Time = (long)(seconds * 1000); } catch { }
+    }
+
+    /// <summary>
+    /// Volume 0-100 and mute. Every player shares one audio session, so in practice this sets
+    /// them for all screens at once (see <see cref="MediaManager.SetVolume"/>).
+    /// </summary>
+    public void SetVolume(int volume, bool muted)
+    {
+        try
+        {
+            _mp.Volume = volume;
+            _mp.Mute = muted;
+        }
+        catch { }
+    }
+
+    /// <summary>True if LibVLC reports a different volume or mute state than the one given.</summary>
+    public bool VolumeDrifted(int volume, bool muted)
+    {
+        try
+        {
+            var v = _mp.Volume;    // -1 while the player has no audio output
+            return v >= 0 && (v != volume || _mp.Mute != muted);
+        }
+        catch { return false; }
     }
 
     public void Dispose()
