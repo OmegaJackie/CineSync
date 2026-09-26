@@ -84,7 +84,7 @@ public sealed class MediaManager : IDisposable
         if (_players.TryRemove(id, out var ms)) ms.Dispose();
     }
 
-    /// <summary>Drop players whose screens no longer exist.</summary>
+    /// <summary>Dispose every player whose screen isn't listed: deleted, or not in your zone.</summary>
     public void PruneExcept(IEnumerable<string> liveIds)
     {
         var keep = new HashSet<string>(liveIds);

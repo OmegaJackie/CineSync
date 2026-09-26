@@ -179,14 +179,20 @@ public sealed class Plugin : IDalamudPlugin
     /// </summary>
     private void DrawWorldScreens()
     {
-        if (!Svc.ClientState.IsLoggedIn) return;
-        _media.PruneExcept(_screens.Keys);
-        _media.EnforceVolume();
+        // Logged out (title screen, character select): no screen should still be playing.
+        if (!Svc.ClientState.IsLoggedIn) { _media.PruneExcept([]); return; }
         var territory = Svc.ClientState.TerritoryType;
 
         // Materialise once: the occluded path costs a full-viewport render + composite per frame,
         // so it must not run at all when this territory has no screens.
         var here = ScreensIn(territory);
+
+        // Only this zone's screens keep a player. One left behind keeps decoding video and stays
+        // audible, and volume can't silence it alone: every player shares one audio session.
+        // Coming back restarts the stream, which for live HLS means rejoining the live edge.
+        _media.PruneExcept(here.Select(s => s.Id));
+        _media.EnforceVolume();
+
         if (here.Count == 0) { DrawGizmo(territory); return; }
 
         var drewOccluded = false;
